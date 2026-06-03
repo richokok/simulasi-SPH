@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Penawaran Layanan — SPH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0e1417; --ink2:#43525a; --line:#d8dee0; --line2:#eef1f2;
+  --paper:#fbfcfc; --panel:#ffffff; --accent:#0a6b5e; --accent2:#0d8a78;
+  --warn:#b4521a; --chip:#eaf4f1; --shadow:0 1px 2px rgba(14,20,23,.06),0 8px 24px rgba(14,20,23,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:
+  radial-gradient(1200px 600px at 100% -10%,#eef5f3 0,transparent 55%),
+  radial-gradient(900px 500px at -10% 110%,#f0f3f2 0,transparent 50%),var(--paper);
+  color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif}
+.wrap{max-width:1320px;margin:0 auto;padding:22px 22px 60px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.brandline{display:flex;align-items:center;gap:12px}
+.dot{width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--chip)}
+header.top h1{font-size:23px;font-weight:800;margin:0;letter-spacing:-.02em}
+header.top .sub{color:var(--ink2);font-size:12.5px;margin-top:2px;letter-spacing:.02em}
+.tagref{font-size:11px;color:var(--ink2);text-align:right;line-height:1.5}
+.grid{display:grid;grid-template-columns:minmax(380px,460px) 1fr;gap:22px;align-items:start}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.panel .ph{padding:13px 16px;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:10px}
+.panel .ph .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+.pad{padding:16px}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:4px}
+.tab{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 10px;cursor:pointer;
+  font-family:'Bricolage Grotesque';font-weight:700;font-size:13.5px;color:var(--ink2);text-align:left;transition:.15s;line-height:1.15}
+.tab small{display:block;font-family:'IBM Plex Sans';font-weight:500;font-size:10.5px;color:#90a0a6;margin-top:3px}
+.tab:hover{border-color:var(--accent2)}
+.tab.on{border-color:var(--accent);background:var(--chip);color:var(--accent)}
+.tab.on small{color:var(--accent2)}
+label.fl{display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin:13px 0 5px;letter-spacing:.01em}
+label.fl span.req{color:var(--warn)}
+input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font-family:'IBM Plex Sans';font-size:14px;background:#fff;color:var(--ink)}
+input.num,select.num{font-family:'IBM Plex Mono'}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.calcbox{margin-top:14px;background:linear-gradient(180deg,#f7faf9,#fff);border:1px dashed var(--accent2);border-radius:11px;padding:13px 14px}
+.calcbox .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.calcbox .big{font-family:'IBM Plex Mono';font-size:25px;font-weight:600;margin-top:3px;letter-spacing:-.01em}
+.calcbox .brk{font-size:11.5px;color:var(--ink2);margin-top:8px;line-height:1.55}
+.calcbox .brk b{color:var(--ink);font-family:'IBM Plex Mono'}
+.err{color:var(--warn);font-size:12px;margin-top:8px;font-weight:600}
+.btn{appearance:none;border:none;border-radius:10px;padding:12px 14px;font-family:'Bricolage Grotesque';font-weight:700;font-size:14px;cursor:pointer;transition:.15s}
+.btn.primary{background:var(--accent);color:#fff;width:100%;margin-top:13px}
+.btn.primary:hover{background:var(--accent2)}
+.btn.primary:disabled{background:#b9c6c4;cursor:not-allowed}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--accent)}
+/* SPH document */
+.sphdoc{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.sphhead{padding:22px 26px 16px;border-bottom:2.5px solid var(--ink)}
+.sphhead .co{font-family:'Bricolage Grotesque';font-weight:800;font-size:20px;letter-spacing:-.02em}
+.sphhead .cos{font-size:11.5px;color:var(--ink2);margin-top:2px}
+.sphhead .title{margin-top:14px;font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;letter-spacing:.18em;text-transform:uppercase}
+.metaG{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-top:12px;font-size:12.5px}
+.metaG .mrow{display:flex;gap:8px}
+.metaG .mk{color:var(--ink2);min-width:74px}
+.metaG input{padding:3px 6px;font-size:12.5px;border:1px solid transparent;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+.metaG input:focus{border-bottom-color:var(--accent);box-shadow:none}
+.sphbody{padding:8px 26px 22px}
+table.items{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+table.items th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:600;padding:8px 8px;border-bottom:1.5px solid var(--ink)}
+table.items td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+table.items td.r,table.items th.r{text-align:right;font-family:'IBM Plex Mono'}
+table.items .desc b{font-family:'Bricolage Grotesque';font-size:13px}
+table.items .desc small{display:block;color:var(--ink2);font-size:11px;margin-top:2px;line-height:1.4}
+.delx{appearance:none;border:none;background:none;color:#b9c6c4;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+.delx:hover{color:var(--warn)}
+.empty{padding:34px 10px;text-align:center;color:#9aabaf;font-size:13px}
+.totbox{margin-top:14px;margin-left:auto;width:min(360px,100%)}
+.totrow{display:flex;justify-content:space-between;padding:6px 2px;font-size:13px}
+.totrow .v{font-family:'IBM Plex Mono'}
+.totrow.grand{border-top:2px solid var(--ink);margin-top:5px;padding-top:10px;font-weight:700;font-size:16px}
+.totrow.grand .v{font-weight:600}
+.ppnsel{display:flex;align-items:center;gap:8px}
+.ppnsel select{width:auto;padding:4px 8px;font-size:12px}
+.terbil{margin-top:12px;font-size:12px;color:var(--ink2);font-style:italic;border-left:3px solid var(--accent);padding:6px 0 6px 11px;background:#f7faf9}
+.foot{padding:14px 26px 22px;border-top:1px solid var(--line2);font-size:11px;color:var(--ink2);line-height:1.6}
+.actions{display:flex;gap:9px;margin:14px 0 0}
+.note{font-size:11px;color:var(--ink2);margin-top:9px;line-height:1.55}
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--chip);color:var(--accent);padding:2px 8px;border-radius:20px}
+/* ===== Formal letter (SPH) ===== */
+.sphdoc{font-family:'Tinos',serif;color:#141414}
+.letterhead{display:flex;align-items:center;gap:14px;padding:24px 32px 12px}
+.lh-logo svg{display:block}
+.lh-co .co{font-family:'Tinos',serif;font-weight:700;font-size:20px;line-height:1.05;color:#16357f;letter-spacing:.01em}
+.lh-co .cos{font-size:11px;color:#555;font-style:italic;margin-top:3px}
+.letterbody{padding:4px 34px 30px;font-size:13.5px;line-height:1.55}
+.ldate{text-align:right;margin:2px 0 14px}
+table.lmeta{border-collapse:collapse;margin-bottom:4px}
+table.lmeta td{vertical-align:top;padding:0 6px 1px 0;font-size:13.5px}
+table.lmeta td:first-child{width:70px}
+.lto{margin:12px 0 4px}
+.lto>div{margin:1px 0}
+.b{font-weight:700}.u{text-decoration:underline}
+.lup{margin-top:10px}
+.lsalam{margin:14px 0 6px}
+.lintro{margin:6px 0;text-align:justify}
+table.ltable{width:100%;border-collapse:collapse;margin:12px 0 4px}
+table.ltable th{background:#dbe5f5;border:1px solid #5b6470;padding:9px 10px;font-weight:700;font-size:13px;text-align:center;color:#15356b}
+table.ltable td{border:1px solid #5b6470;padding:8px 11px;font-size:13.5px;vertical-align:middle}
+table.ltable th.c1{width:30%}table.ltable th.c2{width:22%}
+table.ltable th.c4{width:20%;text-align:center}
+table.ltable td.c4{text-align:right;white-space:nowrap;color:var(--ink2);font-size:12.5px}
+table.ltable td.c1 small.sub{display:block;font-size:10.5px;color:#7a7a7a;font-style:italic;margin-top:2px;font-family:'IBM Plex Sans'}
+table.ltable td.c3{text-align:left;white-space:nowrap}
+.ltable td.r{text-align:right}.ltable .b{font-weight:700}
+tfoot .ltotal td{background:#f4f7fc}
+.lnote{font-size:11.5px;font-style:italic;color:#333;margin:3px 0 2px}
+.lket{margin:16px 0 6px}
+.lket-h{font-weight:700;text-decoration:underline;margin-bottom:4px}
+.lket ol{margin:4px 0;padding-left:26px}
+.lket li{margin:3px 0;font-size:13px;line-height:1.5}
+.lclose{margin:14px 0 6px;text-align:justify}
+.lsign{margin-top:18px;font-size:13.5px;line-height:1.5}
+.lsign .sgap{height:46px}.lsign .sgap2{height:30px}
+.lsign .smk span:first-child{display:inline-block;min-width:96px}
+.dz{width:22px}
+[contenteditable="true"]:hover{outline:1px dashed #c7d3d0;outline-offset:2px}
+[contenteditable="true"]:focus{outline:1px solid var(--accent);outline-offset:2px;background:#f6fbfa}
+
+/* ═══════════════ AUTH / HISTORY / APPROVAL CSS ═══════════════ */
+/* Login overlay */
+#login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0a6b5e 0,#083d35 100%);
+  z-index:999;display:flex;align-items:center;justify-content:center}
+#login-overlay.hidden{display:none}
+.login-box{background:#fff;border-radius:16px;padding:36px 40px;min-width:340px;
+  box-shadow:0 24px 64px rgba(0,0,0,.3);text-align:center}
+.login-box .logo{height:60px;margin-bottom:16px}
+.login-box h2{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;
+  color:var(--ink);margin-bottom:4px}
+.login-box .sub{font-size:12px;color:var(--ink2);margin-bottom:24px}
+.login-box .lf{text-align:left;margin-bottom:14px}
+.login-box .lf label{display:block;font-size:11px;font-weight:600;color:var(--ink2);
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.login-box .lf input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+  font-family:'IBM Plex Sans';font-size:14px}
+.login-box .lf input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.login-box .btn-login{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;cursor:pointer;margin-top:4px}
+.login-box .btn-login:hover{background:var(--accent2)}
+.login-err{color:var(--warn);font-size:12px;margin-top:8px;font-weight:600;display:none}
+/* Top bar */
+#topbar-user{background:var(--panel);border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;align-items:center;gap:14px;font-size:12.5px}
+#topbar-user .tu-name{font-weight:600;color:var(--ink)}
+#topbar-user .tu-role{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;
+  background:var(--chip);color:var(--accent)}
+#topbar-user .tu-space{flex:1}
+.btn-sm-ghost{appearance:none;border:1px solid var(--line);background:#fff;border-radius:6px;
+  padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;cursor:pointer;color:var(--ink2)}
+.btn-sm-ghost:hover{border-color:var(--accent);color:var(--accent)}
+/* History overlay */
+#hist-overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:200;
+  display:none;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+#hist-overlay.on{display:flex}
+.hist-box{background:#fff;border-radius:14px;width:min(940px,96%);margin-bottom:40px;
+  box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden}
+.hist-header{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.hist-header h2{font-family:'Bricolage Grotesque';font-size:18px;font-weight:800;flex:1}
+.hist-tabs{display:flex;gap:6px}
+.hist-tab{appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;
+  padding:6px 14px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer;color:var(--ink2)}
+.hist-tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* History table */
+.hist-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.hist-table th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink2);font-weight:600;padding:9px 14px;border-bottom:1.5px solid var(--line)}
+.hist-table td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:top}
+.hist-table tr:hover td{background:#f7faf9;cursor:pointer}
+.status-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:3px 10px;border-radius:20px}
+.s-draft{background:#eef1f2;color:#43525a}
+.s-submitted{background:#fff8e6;color:#b4521a}
+.s-partial{background:#e6f0ff;color:#1a5fa8}
+.s-approved{background:#eaf4f1;color:#0a6b5e}
+.s-rejected{background:#fde8e8;color:#c0392b}
+/* Approval detail */
+.appr-chain{padding:16px 20px;background:#f7faf9;border-radius:10px;margin:14px 20px}
+.appr-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.appr-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;margin-top:2px}
+.appr-dot.done{background:var(--chip);color:var(--accent)}
+.appr-dot.wait{background:#eef1f2;color:#888}
+.appr-dot.rej{background:#fde8e8;color:#c0392b}
+.appr-info .label{font-size:10.5px;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.appr-info .who{font-size:13px;font-weight:600;color:var(--ink)}
+.appr-info .when{font-size:11px;color:var(--ink2);margin-top:1px}
+.appr-info .note{font-size:11.5px;color:var(--ink2);font-style:italic;margin-top:3px}
+.appr-actions{padding:0 20px 20px;display:flex;gap:10px;flex-wrap:wrap}
+.btn-approve{appearance:none;border:none;border-radius:8px;padding:9px 18px;font-family:'Bricolage Grotesque';
+  font-weight:700;font-size:13px;cursor:pointer}
+.btn-approve.green{background:var(--accent);color:#fff}
+.btn-approve.green:hover{background:var(--accent2)}
+.btn-approve.red{background:#fde8e8;color:#c0392b;border:1px solid #f5a0a0}
+.btn-approve.red:hover{background:#c0392b;color:#fff}
+.note-inp{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+  font-family:'IBM Plex Sans';font-size:13px;margin:10px 0}
+.sph-items-mini{width:100%;border-collapse:collapse;font-size:12px;margin:0 20px 0;width:calc(100% - 40px)}
+.sph-items-mini th{background:var(--chip);padding:7px 10px;text-align:left;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:600}
+.sph-items-mini td{padding:8px 10px;border-bottom:1px solid var(--line2)}
+.sph-items-mini td.r{text-align:right;font-family:'IBM Plex Mono'}
+
+/* ═══ USER MANAGEMENT ═══ */
+#user-overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:300;
+  display:none;align-items:center;justify-content:center}
+#user-overlay.on{display:flex}
+.user-box{background:#fff;border-radius:14px;width:min(720px,96%);max-height:90vh;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.user-box-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+.user-box-head h2{font-family:'Bricolage Grotesque';font-size:17px;font-weight:800;flex:1;margin:0}
+.user-body{overflow-y:auto;flex:1}
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);
+  font-weight:600;padding:9px 14px;border-bottom:1.5px solid var(--line);text-align:left;background:#fff;
+  position:sticky;top:0;z-index:1}
+.user-table td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:middle;font-size:13px}
+.role-chip{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.rc-admin{background:#fff0e0;color:#b4521a}
+.rc-commercial{background:var(--chip);color:var(--accent)}
+.rc-manager{background:#e0eeff;color:#1a5fa8}
+.rc-director{background:#f0e8ff;color:#7c3aed}
+.user-form{padding:18px 20px;background:#f7faf9;border-top:1px solid var(--line)}
+.user-form h3{font-family:'Bricolage Grotesque';font-size:14px;font-weight:700;margin:0 0 14px}
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.uf-row{display:flex;flex-direction:column;gap:4px}
+.uf-row label{font-size:10.5px;font-weight:600;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+.uf-row input,.uf-row select{padding:8px 10px;border:1px solid var(--line);border-radius:7px;
+  font-family:'IBM Plex Sans';font-size:13px;background:#fff}
+.uf-row input:focus,.uf-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.uf-row .hint{font-size:10.5px;color:var(--ink2);margin-top:2px}
+.uf-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.btn-danger-sm{appearance:none;border:1px solid #f5a0a0;background:#fde8e8;color:#c0392b;
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-danger-sm:hover{background:#c0392b;color:#fff}
+.btn-edit-sm{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink2);
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-edit-sm:hover{border-color:var(--accent);color:var(--accent)}
+.pw-toggle{position:relative;display:flex;align-items:center}
+.pw-toggle input{flex:1;padding-right:36px}
+.pw-toggle .eye{position:absolute;right:10px;cursor:pointer;color:var(--ink2);font-size:14px;user-select:none}
+
+@media print{#topbar-user,#hist-overlay,#login-overlay,.noprint{display:none!important}}
+
+
+/* ═══ USER MANAGEMENT ═══ */
+#user-overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:300;
+  display:none;align-items:center;justify-content:center}
+#user-overlay.on{display:flex}
+.user-box{background:#fff;border-radius:14px;width:min(720px,96%);max-height:90vh;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.user-box-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+.user-box-head h2{font-family:'Bricolage Grotesque';font-size:17px;font-weight:800;flex:1;margin:0}
+.user-body{overflow-y:auto;flex:1}
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);
+  font-weight:600;padding:9px 14px;border-bottom:1.5px solid var(--line);text-align:left;background:#fff;
+  position:sticky;top:0;z-index:1}
+.user-table td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:middle;font-size:13px}
+.role-chip{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.rc-admin{background:#fff0e0;color:#b4521a}
+.rc-commercial{background:var(--chip);color:var(--accent)}
+.rc-manager{background:#e0eeff;color:#1a5fa8}
+.rc-director{background:#f0e8ff;color:#7c3aed}
+.user-form{padding:18px 20px;background:#f7faf9;border-top:1px solid var(--line)}
+.user-form h3{font-family:'Bricolage Grotesque';font-size:14px;font-weight:700;margin:0 0 14px}
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.uf-row{display:flex;flex-direction:column;gap:4px}
+.uf-row label{font-size:10.5px;font-weight:600;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+.uf-row input,.uf-row select{padding:8px 10px;border:1px solid var(--line);border-radius:7px;
+  font-family:'IBM Plex Sans';font-size:13px;background:#fff}
+.uf-row input:focus,.uf-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.uf-row .hint{font-size:10.5px;color:var(--ink2);margin-top:2px}
+.uf-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.btn-danger-sm{appearance:none;border:1px solid #f5a0a0;background:#fde8e8;color:#c0392b;
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-danger-sm:hover{background:#c0392b;color:#fff}
+.btn-edit-sm{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink2);
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-edit-sm:hover{border-color:var(--accent);color:var(--accent)}
+.pw-toggle{position:relative;display:flex;align-items:center}
+.pw-toggle input{flex:1;padding-right:36px}
+.pw-toggle .eye{position:absolute;right:10px;cursor:pointer;color:var(--ink2);font-size:14px;user-select:none}
+
+@media print{.sphdoc [contenteditable]:hover,.sphdoc [contenteditable]:focus{outline:none;background:transparent}}
+
+/* ═══════════════ AUTH / HISTORY / APPROVAL CSS ═══════════════ */
+/* Login overlay */
+#login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0a6b5e 0,#083d35 100%);
+  z-index:999;display:flex;align-items:center;justify-content:center}
+#login-overlay.hidden{display:none}
+.login-box{background:#fff;border-radius:16px;padding:36px 40px;min-width:340px;
+  box-shadow:0 24px 64px rgba(0,0,0,.3);text-align:center}
+.login-box .logo{height:60px;margin-bottom:16px}
+.login-box h2{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;
+  color:var(--ink);margin-bottom:4px}
+.login-box .sub{font-size:12px;color:var(--ink2);margin-bottom:24px}
+.login-box .lf{text-align:left;margin-bottom:14px}
+.login-box .lf label{display:block;font-size:11px;font-weight:600;color:var(--ink2);
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.login-box .lf input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+  font-family:'IBM Plex Sans';font-size:14px}
+.login-box .lf input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.login-box .btn-login{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;cursor:pointer;margin-top:4px}
+.login-box .btn-login:hover{background:var(--accent2)}
+.login-err{color:var(--warn);font-size:12px;margin-top:8px;font-weight:600;display:none}
+/* Top bar */
+#topbar-user{background:var(--panel);border-bottom:1px solid var(--line);
+  padding:9px 22px;display:flex;align-items:center;gap:14px;font-size:12.5px}
+#topbar-user .tu-name{font-weight:600;color:var(--ink)}
+#topbar-user .tu-role{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;
+  background:var(--chip);color:var(--accent)}
+#topbar-user .tu-space{flex:1}
+.btn-sm-ghost{appearance:none;border:1px solid var(--line);background:#fff;border-radius:6px;
+  padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;cursor:pointer;color:var(--ink2)}
+.btn-sm-ghost:hover{border-color:var(--accent);color:var(--accent)}
+/* History overlay */
+#hist-overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:200;
+  display:none;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+#hist-overlay.on{display:flex}
+.hist-box{background:#fff;border-radius:14px;width:min(940px,96%);margin-bottom:40px;
+  box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden}
+.hist-header{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.hist-header h2{font-family:'Bricolage Grotesque';font-size:18px;font-weight:800;flex:1}
+.hist-tabs{display:flex;gap:6px}
+.hist-tab{appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;
+  padding:6px 14px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer;color:var(--ink2)}
+.hist-tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* History table */
+.hist-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.hist-table th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink2);font-weight:600;padding:9px 14px;border-bottom:1.5px solid var(--line)}
+.hist-table td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:top}
+.hist-table tr:hover td{background:#f7faf9;cursor:pointer}
+.status-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:3px 10px;border-radius:20px}
+.s-draft{background:#eef1f2;color:#43525a}
+.s-submitted{background:#fff8e6;color:#b4521a}
+.s-partial{background:#e6f0ff;color:#1a5fa8}
+.s-approved{background:#eaf4f1;color:#0a6b5e}
+.s-rejected{background:#fde8e8;color:#c0392b}
+/* Approval detail */
+.appr-chain{padding:16px 20px;background:#f7faf9;border-radius:10px;margin:14px 20px}
+.appr-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.appr-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;margin-top:2px}
+.appr-dot.done{background:var(--chip);color:var(--accent)}
+.appr-dot.wait{background:#eef1f2;color:#888}
+.appr-dot.rej{background:#fde8e8;color:#c0392b}
+.appr-info .label{font-size:10.5px;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.appr-info .who{font-size:13px;font-weight:600;color:var(--ink)}
+.appr-info .when{font-size:11px;color:var(--ink2);margin-top:1px}
+.appr-info .note{font-size:11.5px;color:var(--ink2);font-style:italic;margin-top:3px}
+.appr-actions{padding:0 20px 20px;display:flex;gap:10px;flex-wrap:wrap}
+.btn-approve{appearance:none;border:none;border-radius:8px;padding:9px 18px;font-family:'Bricolage Grotesque';
+  font-weight:700;font-size:13px;cursor:pointer}
+.btn-approve.green{background:var(--accent);color:#fff}
+.btn-approve.green:hover{background:var(--accent2)}
+.btn-approve.red{background:#fde8e8;color:#c0392b;border:1px solid #f5a0a0}
+.btn-approve.red:hover{background:#c0392b;color:#fff}
+.note-inp{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+  font-family:'IBM Plex Sans';font-size:13px;margin:10px 0}
+.sph-items-mini{width:100%;border-collapse:collapse;font-size:12px;margin:0 20px 0;width:calc(100% - 40px)}
+.sph-items-mini th{background:var(--chip);padding:7px 10px;text-align:left;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:600}
+.sph-items-mini td{padding:8px 10px;border-bottom:1px solid var(--line2)}
+.sph-items-mini td.r{text-align:right;font-family:'IBM Plex Mono'}
+
+/* ═══ USER MANAGEMENT ═══ */
+#user-overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:300;
+  display:none;align-items:center;justify-content:center}
+#user-overlay.on{display:flex}
+.user-box{background:#fff;border-radius:14px;width:min(720px,96%);max-height:90vh;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.user-box-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+.user-box-head h2{font-family:'Bricolage Grotesque';font-size:17px;font-weight:800;flex:1;margin:0}
+.user-body{overflow-y:auto;flex:1}
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);
+  font-weight:600;padding:9px 14px;border-bottom:1.5px solid var(--line);text-align:left;background:#fff;
+  position:sticky;top:0;z-index:1}
+.user-table td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:middle;font-size:13px}
+.role-chip{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.rc-admin{background:#fff0e0;color:#b4521a}
+.rc-commercial{background:var(--chip);color:var(--accent)}
+.rc-manager{background:#e0eeff;color:#1a5fa8}
+.rc-director{background:#f0e8ff;color:#7c3aed}
+.user-form{padding:18px 20px;background:#f7faf9;border-top:1px solid var(--line)}
+.user-form h3{font-family:'Bricolage Grotesque';font-size:14px;font-weight:700;margin:0 0 14px}
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.uf-row{display:flex;flex-direction:column;gap:4px}
+.uf-row label{font-size:10.5px;font-weight:600;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+.uf-row input,.uf-row select{padding:8px 10px;border:1px solid var(--line);border-radius:7px;
+  font-family:'IBM Plex Sans';font-size:13px;background:#fff}
+.uf-row input:focus,.uf-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.uf-row .hint{font-size:10.5px;color:var(--ink2);margin-top:2px}
+.uf-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.btn-danger-sm{appearance:none;border:1px solid #f5a0a0;background:#fde8e8;color:#c0392b;
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-danger-sm:hover{background:#c0392b;color:#fff}
+.btn-edit-sm{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink2);
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-edit-sm:hover{border-color:var(--accent);color:var(--accent)}
+.pw-toggle{position:relative;display:flex;align-items:center}
+.pw-toggle input{flex:1;padding-right:36px}
+.pw-toggle .eye{position:absolute;right:10px;cursor:pointer;color:var(--ink2);font-size:14px;user-select:none}
+
+@media print{#topbar-user,#hist-overlay,#login-overlay,.noprint{display:none!important}}
+
+
+/* ═══ USER MANAGEMENT ═══ */
+#user-overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:300;
+  display:none;align-items:center;justify-content:center}
+#user-overlay.on{display:flex}
+.user-box{background:#fff;border-radius:14px;width:min(720px,96%);max-height:90vh;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.user-box-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+.user-box-head h2{font-family:'Bricolage Grotesque';font-size:17px;font-weight:800;flex:1;margin:0}
+.user-body{overflow-y:auto;flex:1}
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);
+  font-weight:600;padding:9px 14px;border-bottom:1.5px solid var(--line);text-align:left;background:#fff;
+  position:sticky;top:0;z-index:1}
+.user-table td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:middle;font-size:13px}
+.role-chip{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.rc-admin{background:#fff0e0;color:#b4521a}
+.rc-commercial{background:var(--chip);color:var(--accent)}
+.rc-manager{background:#e0eeff;color:#1a5fa8}
+.rc-director{background:#f0e8ff;color:#7c3aed}
+.user-form{padding:18px 20px;background:#f7faf9;border-top:1px solid var(--line)}
+.user-form h3{font-family:'Bricolage Grotesque';font-size:14px;font-weight:700;margin:0 0 14px}
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.uf-row{display:flex;flex-direction:column;gap:4px}
+.uf-row label{font-size:10.5px;font-weight:600;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+.uf-row input,.uf-row select{padding:8px 10px;border:1px solid var(--line);border-radius:7px;
+  font-family:'IBM Plex Sans';font-size:13px;background:#fff}
+.uf-row input:focus,.uf-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--chip)}
+.uf-row .hint{font-size:10.5px;color:var(--ink2);margin-top:2px}
+.uf-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.btn-danger-sm{appearance:none;border:1px solid #f5a0a0;background:#fde8e8;color:#c0392b;
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-danger-sm:hover{background:#c0392b;color:#fff}
+.btn-edit-sm{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink2);
+  border-radius:6px;padding:5px 11px;font-family:'IBM Plex Sans';font-size:12px;font-weight:600;cursor:pointer}
+.btn-edit-sm:hover{border-color:var(--accent);color:var(--accent)}
+.pw-toggle{position:relative;display:flex;align-items:center}
+.pw-toggle input{flex:1;padding-right:36px}
+.pw-toggle .eye{position:absolute;right:10px;cursor:pointer;color:var(--ink2);font-size:14px;user-select:none}
+
+@media print{
+  body{background:#fff}
+  .noprint{display:none!important}
+  .wrap{max-width:none;padding:0}
+  .grid{display:block}
+  .sphdoc{border:none;box-shadow:none;border-radius:0}
+  header.top{display:none}
+}
+</style>
+</head>
+<body>
+
+
+<!-- USER MANAGEMENT OVERLAY -->
+<div id="user-overlay">
+  <div class="user-box">
+    <div class="user-box-head">
+      <h2>👥 Kelola Pengguna</h2>
+      <button class="btn-sm-ghost" onclick="closeUserMgmt()">✕ Tutup</button>
+    </div>
+    <div class="user-body">
+      <table class="user-table">
+        <thead><tr>
+          <th>#</th><th>Nama Lengkap</th><th>Username</th><th>Role</th>
+          <th>Dibuat</th><th style="text-align:center">Aksi</th>
+        </tr></thead>
+        <tbody id="user-tbody"></tbody>
+      </table>
+    </div>
+    <div class="user-form">
+      <h3 id="uf-title">+ Tambah Pengguna Baru</h3>
+      <input type="hidden" id="uf-edit-idx" value="">
+      <div class="uf-grid">
+        <div class="uf-row">
+          <label>Nama Lengkap *</label>
+          <input id="uf-name" type="text" placeholder="mis. Budi Santoso">
+        </div>
+        <div class="uf-row">
+          <label>Username *</label>
+          <input id="uf-user" type="text" placeholder="mis. budi.santoso" autocomplete="off">
+          <span class="hint">Huruf kecil, tanpa spasi</span>
+        </div>
+        <div class="uf-row">
+          <label>Password *</label>
+          <div class="pw-toggle">
+            <input id="uf-pass" type="password" placeholder="Minimal 6 karakter" autocomplete="new-password">
+            <span class="eye" onclick="togglePw('uf-pass',this)">👁</span>
+          </div>
+          <span class="hint" id="uf-pass-hint">Kosongkan jika tidak ingin mengubah password (saat edit)</span>
+        </div>
+        <div class="uf-row">
+          <label>Role *</label>
+          <select id="uf-role">
+            <option value="commercial">Commercial — Buat & kirim SPH</option>
+            <option value="manager">Manager — + Mengetahui</option>
+            <option value="director">Direktur — + Menyetujui</option>
+            <option value="admin">Admin — Akses penuh</option>
+          </select>
+        </div>
+      </div>
+      <div class="uf-actions">
+        <button class="btn-sm-ghost" id="uf-cancel-btn" onclick="cancelEditUser()" style="display:none">Batal</button>
+        <button class="btn primary" onclick="saveUser()">Simpan Pengguna</button>
+      </div>
+      <div id="uf-err" style="color:var(--warn);font-size:12px;margin-top:8px;font-weight:600;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay">
+  <div class="login-box">
+    <img class="logo" id="login-logo" src="" alt="PTT">
+    <h2>Simulator SPH</h2>
+    <div class="sub">PT. Palapa Timur Telematika — Silakan masuk</div>
+    <div class="lf"><label>Username</label><input id="l-user" type="text" placeholder="username" autocomplete="username"></div>
+    <div class="lf"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" onclick="doLogin()">Masuk →</button>
+    <div class="login-err" id="login-err">Username atau password salah.</div>
+    <div style="margin-top:16px;font-size:10.5px;color:#aaa">Default: admin/admin123 · commercial/comm123<br>manager/mgr123 · director/dir123</div>
+  </div>
+</div>
+
+<!-- TOP USER BAR -->
+<div id="topbar-user">
+  <span style="font-size:15px">👤</span>
+  <span class="tu-name" id="tu-name">—</span>
+  <span class="tu-role" id="tu-role">—</span>
+  <span class="tu-space"></span>
+  <button class="btn-sm-ghost" id="btn-user-mgmt" onclick="openUserMgmt()" style="display:none">👥 Kelola User</button>
+  <button class="btn-sm-ghost" onclick="openHistory()">📋 Riwayat SPH</button>
+  <button class="btn-sm-ghost" onclick="doLogout()">Keluar</button>
+</div>
+
+<!-- HISTORY OVERLAY -->
+<div id="hist-overlay">
+  <div class="hist-box">
+    <div class="hist-header">
+      <h2>📋 Riwayat SPH</h2>
+      <div class="hist-tabs">
+        <button class="hist-tab on" data-hf="" onclick="setHistFilter(this,'')">Semua</button>
+        <button class="hist-tab" data-hf="draft" onclick="setHistFilter(this,'draft')">Draft</button>
+        <button class="hist-tab" data-hf="submitted" onclick="setHistFilter(this,'submitted')">Menunggu</button>
+        <button class="hist-tab" data-hf="approved" onclick="setHistFilter(this,'approved')">Disetujui</button>
+      </div>
+      <button class="btn-sm-ghost" style="margin-left:14px" onclick="closeHistory()">✕ Tutup</button>
+    </div>
+    <div id="hist-list" style="max-height:70vh;overflow-y:auto"></div>
+    <div id="hist-detail" style="display:none"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brandline">
+      <span class="dot"></span>
+      <div>
+        <h1>Simulator Penawaran Layanan</h1>
+        <div class="sub">Perhitungan tarif &amp; pembuatan Surat Penawaran Harga (SPH)</div>
+      </div>
+    </div>
+    <div class="tagref">Acuan tarif: sheet <b>Referensi</b><br>Layanan · Dark Fiber · Colocation · Perluasan</div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: configurator -->
+    <div class="panel noprint">
+      <div class="ph"><span class="k">Konfigurasi Item</span></div>
+      <div class="pad">
+        <div class="tabs" id="tabs">
+          <button class="tab on" data-t="layanan">Layanan <small>Bandwidth / kapasitas (Gbps)</small></button>
+          <button class="tab" data-t="darkfiber">Dark Fiber <small>Sewa per km segmen</small></button>
+          <button class="tab" data-t="colo">Colocation <small>Rak / U-space + daya</small></button>
+          <button class="tab" data-t="perluasan">Perluasan <small>BAKTI + PTT + lastmile</small></button>
+        </div>
+        <div id="form"></div>
+        <div class="calcbox">
+          <div class="lab">Harga / Bulan (setelah diskon)</div>
+          <div class="big num" id="livePrice">—</div>
+          <div class="brk" id="liveBreak"></div>
+          <div class="err" id="liveErr"></div>
+        </div>
+        <button class="btn primary" id="addBtn" disabled>+ Tambah ke SPH</button>
+        <div class="note" id="hint"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SPH document -->
+    <div>
+      <div class="actions noprint">
+        <button class="btn ghost" id="printBtn">⎙ Cetak / PDF</button>
+        <button class="btn ghost" id="saveBtn" onclick="saveToHistory('draft')">💾 Simpan Draft</button>
+        <button class="btn primary" id="submitBtn" onclick="saveToHistory('submitted')">📤 Kirim Approval</button>
+        <button class="btn ghost" id="clearBtn">Kosongkan SPH</button>
+        <span class="ppnsel" style="align-self:center;font-size:12px;color:var(--ink2)">PPN
+          <select id="ppnMode"><option value="0" selected>Belum termasuk (catatan)</option><option value="11">Tambah 11%</option><option value="12">Tambah 12%</option></select>
+        </span>
+      </div>
+      <div class="sphdoc" id="sph">
+        <div class="letterhead">
+          <div class="lh-logo"><img src="data:image/jpeg;base64,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" alt="Logo PTT" style="height:72px;display:block"></div>
+          <div class="lh-co">
+            <div class="co" contenteditable="true">PT. PALAPA TIMUR TELEMATIKA</div>
+            <div class="cos" contenteditable="true">Ikut Membangun Negeri</div>
+          </div>
+        </div>
+        <div class="letterbody">
+          <div class="ldate" contenteditable="true" id="m_tgl">Jakarta, 28 April 2026</div>
+          <table class="lmeta"><tbody>
+            <tr><td>Nomor</td><td>:</td><td><span contenteditable="true" id="m_no">2805/PTT/PD-MGR-COM/IV/2026</span></td></tr>
+            <tr><td>Lampiran</td><td>:</td><td><span contenteditable="true">1 Set</span></td></tr>
+            <tr><td>Perihal</td><td>:</td><td><span contenteditable="true">Surat Pemberitahuan Harga Layanan Dark Fiber Proyek 9 &amp; 10 Di Palapa Ring Paket Timur</span></td></tr>
+          </tbody></table>
+          <div class="lto">
+            <div>Kepada Yth.</div>
+            <div class="b" contenteditable="true">PT Pusat Fiber Indonesia</div>
+            <div contenteditable="true">Di Tempat</div>
+            <div class="lup b" contenteditable="true">Up. Bp. Firdaus Andi Wibowo</div>
+          </div>
+          <p class="lsalam">Dengan Hormat,</p>
+          <p class="lintro" contenteditable="true">Bersama ini kami sampaikan surat pemberitahuan harga untuk kebutuhan sewa layanan di Palapa Ring Paket Timur, sebagai berikut :</p>
+
+          <table class="ltable"><thead><tr>
+            <th class="c1" contenteditable="true" id="hdrName">Dark Fiber</th>
+            <th class="c2" contenteditable="true" id="hdrMid">Panjang Kabel (Meter)</th>
+            <th class="c4">Harga / Bulan</th>
+            <th class="c3" contenteditable="true" id="hdrVal">Tarif Sewa</th>
+            <th class="noprint dz"></th>
+          </tr></thead>
+          <tbody id="items"></tbody>
+          <tfoot id="tfoot"></tfoot>
+          </table>
+          <div id="emptyMsg" class="empty">Belum ada item. Konfigurasikan layanan di panel kiri lalu klik <b>Tambah ke SPH</b>.</div>
+          <div class="lnote" contenteditable="true" id="lnote">Harga belum termasuk ppn</div>
+
+          <div class="lket">
+            <div class="lket-h">Keterangan :</div>
+            <ol contenteditable="true" id="ketList">
+              <li>Tarif Dasar Core / DF Inland: Rp 1.000.000 per KM per Bulan.</li>
+              <li>Tarif Dasar Core / DF Submarine: Rp 3.000.000 per KM per Bulan.</li>
+              <li>Aktivasi dark fiber sepenuhnya tanggung jawab pelanggan.</li>
+              <li>Skema penyewaan LTC dengan ketentuan pembayaran 30% dimuka (pada tahun pertama), 70% secara bertahap (per tahun).</li>
+            </ol>
+          </div>
+
+          <p class="lclose" contenteditable="true">Surat Pemberitahuan ini bersifat indikatif dan tidak mengikat secara hukum, dan tidak dapat dianggap sebagai persetujuan atau perjanjian yang sah antara para pihak sampai dengan ditandatanganinya kontrak atau perjanjian tertulis yang mengatur secara lengkap hak dan kewajiban masing-masing pihak.</p>
+          <p contenteditable="true">Demikian Surat Pemberitahuan ini kami sampaikan, atas perhatian dan kerjasamanya kami ucapkan terima kasih.</p>
+
+          <div class="lsign">
+            <div>Hormat Kami,</div>
+            <div class="b" contenteditable="true">PT. PALAPA TIMUR TELEMATIKA</div>
+            <div class="sgap"></div>
+            <div class="b u" contenteditable="true">Noni Adela</div>
+            <div contenteditable="true">Commercial</div>
+            <div class="sgap2"></div>
+            <div class="smk"><span>Mengetahui :</span> <span contenteditable="true">Rizki Catur P</span></div>
+            <div class="smk"><span>Menyetujui&nbsp; :</span> <span contenteditable="true">Ardyan Syahputra</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"layanan": {"P9": [{"cap": 10.0, "price": 208000000.0}, {"cap": 1.0, "price": 26000000.0}], "P10": [{"cap": 10.0, "price": 392000000.0}, {"cap": 1.0, "price": 49000000.0}], "P11": [{"cap": 10.0, "price": 552000000.0}, {"cap": 1.0, "price": 69000000.0}], "P12": [{"cap": 10.0, "price": 176000000.0}, {"cap": 1.0, "price": 22000000.0}], "P13": [{"cap": 10.0, "price": 192000000.0}, {"cap": 1.0, "price": 24000000.0}], "P14MW": [{"cap": 0.1, "price": 55300000.0}, {"cap": 0.25, "price": 138250000.0}], "P15A": [{"cap": 10.0, "price": 384000000.0}, {"cap": 1.0, "price": 48000000.0}], "P15B": [{"cap": 10.0, "price": 280000000.0}, {"cap": 1.0, "price": 35000000.0}], "P15MW": [{"cap": 0.1, "price": 86400000.0}, {"cap": 0.25, "price": 216000000.0}], "P16": [{"cap": 10.0, "price": 80000000.0}, {"cap": 1.0, "price": 10000000.0}], "P16MW": [{"cap": 0.1, "price": 71200000.0}, {"cap": 0.25, "price": 178000000.0}], "P17A": [{"cap": 10.0, "price": 160000000.0}, {"cap": 1.0, "price": 20000000.0}], "P17B": [{"cap": 10.0, "price": 144000000.0}, {"cap": 1.0, "price": 18000000.0}], "P17MWA": [{"cap": 0.1, "price": 30400000.0}, {"cap": 0.25, "price": 76000000.0}], "P17MWB": [{"cap": 0.1, "price": 30400000.0}, {"cap": 0.25, "price": 76000000.0}]}, "darkfiber": [{"name": "DF KepiBMH-KepiTower", "type": "darat", "total_km": 56.385}, {"name": "DF Waingapu-Sabu", "type": "laut", "total_km": 259.439}, {"name": "DF Sabu-Baa", "type": "laut", "total_km": 221.645}, {"name": "DF Baa-Kupang", "type": "laut", "total_km": 138.526}, {"name": "DF Alor-Wetar", "type": "laut", "total_km": 253.231}, {"name": "DF Wetar-Tiakur", "type": "laut", "total_km": 194.416}, {"name": "DF Tiakur-Saumlaki", "type": "laut", "total_km": 414.299}, {"name": "DF Saumlaki-Tual", "type": "laut", "total_km": 390.916}, {"name": "DF Tual-Dobo", "type": "laut", "total_km": 238.137}, {"name": "DF Dobo-Timika", "type": "laut", "total_km": 379.057}, {"name": "DF Timika-Tigi", "type": "darat", "total_km": 200.787}, {"name": "DF Tigi-Enarotali", "type": "darat", "total_km": 28.742}, {"name": "DF Enarotali-Kigamani", "type": "darat", "total_km": 65.872}, {"name": "DF Kigamani-Nabire", "type": "darat", "total_km": 202.585}, {"name": "DF Nabire-Raisei", "type": "laut", "total_km": 266.853}, {"name": "DF Raisei-Ransiki", "type": "laut", "total_km": 177.247}, {"name": "DF Ransiki-Manokwari", "type": "darat", "total_km": 111.35}, {"name": "DF Nabire-Botawa", "type": "laut", "total_km": 190.658}, {"name": "DF Botawa-Serui", "type": "laut", "total_km": 43.589}, {"name": "DF Serui-Biak", "type": "laut", "total_km": 208.98}, {"name": "DF Biak-sorendeweri", "type": "laut", "total_km": 100.475}, {"name": "DF Sorendeweri-Numfor", "type": "laut", "total_km": 116.568}, {"name": "DF Numfor-Manokwari", "type": "laut", "total_km": 93.389}, {"name": "DF Ransiki-Anggi (Main)", "type": "darat", "total_km": 82.582}, {"name": "DF Ransiki-Anggi (Protect)", "type": "darat", "total_km": 81.76}, {"name": "DF Ransiki-Bintuni", "type": "darat", "total_km": 174.811}, {"name": "DF Bintuni-Tangguh", "type": "laut", "total_km": 125.907}, {"name": "DF Tangguh-Teminabuan", "type": "laut", "total_km": 258.211}, {"name": "DF Teminabuan-Aifat", "type": "darat", "total_km": 92.47}, {"name": "DF Aifat-Sorong", "type": "darat", "total_km": 209.936}, {"name": "DF Sorong-FEF (Main)", "type": "darat", "total_km": 171.87}, {"name": "DF Sorong-FEF (Protect)", "type": "darat", "total_km": 171.87}, {"name": "DF Timika-Agats", "type": "laut", "total_km": 212.801}, {"name": "DF Agats-Kepi BMH", "type": "laut", "total_km": 282.781}, {"name": "DF Jayapura-Waris(Main)", "type": "darat", "total_km": 129.311}, {"name": "DF Jayapura-Waris(Protect)", "type": "darat", "total_km": 128.323}, {"name": "DF Merauke-Muting", "type": "darat", "total_km": 230.031}, {"name": "DF Muting-Tanah Merah", "type": "darat", "total_km": 188.861}, {"name": "DF Tanah Merah-Waropko", "type": "darat", "total_km": 118.937}], "colo": [{"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "1U space", "price": 1000000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "2U space", "price": 1500000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "3U space", "price": 2500000.0, "coef": 1.0}, {"proj": "P9", "loc": "Waingapu, Sabu, Baa, Kupang", "prod": "4U space", "price": 3000000.0, "coef": 1.0}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "1U space", "price": 1000000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "2U space", "price": 1500000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "3U space", "price": 2500000.0, "coef": 1.3}, {"proj": "P10", "loc": "Alor, Wetar, Tiakur, Saumlaki, Tual, Dobo, Timika", "prod": "4U space", "price": 3000000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "1U space", "price": 1000000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "2U space", "price": 1500000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "3U space", "price": 2500000.0, "coef": 1.3}, {"proj": "P11", "loc": "Manokwari, Ransiki, Raisei, Nabire, Botawa, Serui, Biak, Sorendiweri, Numfor", "prod": "4U space", "price": 3000000.0, "coef": 1.3}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "1U space", "price": 1000000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "2U space", "price": 1500000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "3U space", "price": 2500000.0, "coef": 1.2}, {"proj": "P12", "loc": "Sorong, FEF, Aifat, Teminabuan, Tangguh", "prod": "4U space", "price": 3000000.0, "coef": 1.2}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "1U space", "price": 1000000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "2U space", "price": 1500000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "3U space", "price": 2500000.0, "coef": 1.5}, {"proj": "P13", "loc": "Manokwari, Ransiki, Anggi, Bintuni, Tangguh", "prod": "4U space", "price": 3000000.0, "coef": 1.5}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "1U space", "price": 1000000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "2U space", "price": 1500000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "3U space", "price": 2500000.0, "coef": 1.4}, {"proj": "P14MW", "loc": "Sarmi, burmeso", "prod": "4U space", "price": 3000000.0, "coef": 1.4}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "1U space", "price": 1000000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "2U space", "price": 1500000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "3U space", "price": 2500000.0, "coef": 3.6}, {"proj": "P15A", "loc": "Timika, Tigi, Enarotali, Kigamani, Nabire, Raisei, Ransiki, Manokwari", "prod": "4U space", "price": 3000000.0, "coef": 3.6}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "1U space", "price": 1000000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "2U space", "price": 1500000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "3U space", "price": 2500000.0, "coef": 1.5}, {"proj": "P16", "loc": "Jayapura, Waris, Arso", "prod": "4U space", "price": 3000000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "1U space", "price": 1000000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "2U space", "price": 1500000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan ruang per 1 MW antena 2.4m < dia <= 3.0m", "price": 5325000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "Tambahan ruang per sectoral antena", "price": 1100000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "3U space", "price": 2500000.0, "coef": 1.5}, {"proj": "P17A", "loc": "Merauke, Tanah Merah, Waropko", "prod": "4U space", "price": 3000000.0, "coef": 1.5}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "1U space", "price": 1000000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "2U space", "price": 1500000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Half rack space / 20U", "price": 8500000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Full rack space / 42U", "price": 16850000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Tambahan daya per 10A DC power", "price": 526000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Tambahan daya per 2A AC power", "price": 460000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Lahan terbuka per 1m2", "price": 500000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "3M window Maks 1.2M MW Antenna", "price": 10500000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "3M window Maks 1.8M MW Antenna", "price": 12500000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Ruang penempatan per antena MW diameter max 1.2M", "price": 2121000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Ruang penempatan per antena MW diameter 1.2m < dia <= 2.0m", "price": 4316000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Ruang penempatan per antena MW diameter 2.0m < dia <= 2.4m", "price": 5315000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Ruang penempatan per antena MW diameter 2.4m < dia <= 3.0m", "price": 7984000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Tambahan ruang per 1 MW antena <= 1.2M", "price": 1414000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Tambahan ruang per 1 MW antena 1.2m < dia <= 2.0M", "price": 2880000.0, "coef": 3.6}, {"proj": "P15MW", "loc": "Timika, Tigi, Enarotali, Sugapa, Ilaga, Kota Mulia, Karubaga, Tiom, Kobakma, Elelim, Jayapura", "prod": "Tambahan ruang per 1 MW antena 2.0m < dia <= 2.4M", "price": 3545000.0, "coef": 3.6}], "perluasan": {"tiers": [1000.0, 750.0, 500.0, 250.0, 200.0, 100.0, 50.0], "bakti": {"P11 - Manokwari - Ransiki": {"prt": 8248148.0, "col": 200000.0}, "P12 - Aifat - Teminabuan": {"prt": 8040870.0, "col": 200000.0}, "P12 - Sorong - Aifat": {"prt": 8071256.0, "col": 200000.0}, "P12 - Sorong - Fef": {"prt": 8383902.0, "col": 200000.0}, "P13 - Ransiki - Anggi": {"prt": 8258200.0, "col": 200000.0}, "P13 - Ransiki - Bintuni": {"prt": 8130744.0, "col": 200000.0}, "P15 - Enarotali - Tigi": {"prt": 9580666.0, "col": 200000.0}, "P15 - Kigamani - Enarotali": {"prt": 8782934.0, "col": 200000.0}, "P15 - Nabire - Kigamani": {"prt": 8441042.0, "col": 200000.0}, "P15 - Tigi - Timika": {"prt": 8031480.0, "col": 200000.0}, "P16 - Jayapura - Waris": {"prt": 8342646.0, "col": 200000.0}, "P17 - Kepi Bmh - Kepi Tower": {"prt": 8055000.0, "col": 200000.0}, "P17 - Waropko - Tanah Merah": {"prt": 8495500.0, "col": 200000.0}, "P17 - Tanah Merah - Merauke": {"prt": 8213568.0, "col": 200000.0}}, "backbone": {"P12 - Aifat - Teminabuan": [1553000.0, 777000.0, 518000.0, 389000.0, 363000.0, 311000.0, 259000.0], "P15 - Enarotali - Tigi": [1449000.0, 725000.0, 483000.0, 363000.0, 338000.0, 290000.0, 242000.0], "P16 - Jayapura - Waris": [2354000.0, 1177000.0, 785000.0, 589000.0, 550000.0, 471000.0, 393000.0], "P17 - Kepi Bmh - Kepi Tower": [2065000.0, 1033000.0, 689000.0, 517000.0, 482000.0, 413000.0, 345000.0], "P15 - Kigamani - Enarotali": [1295000.0, 648000.0, 432000.0, 324000.0, 302000.0, 259000.0, 216000.0], "P11 - Manokwari - Ransiki": [2091000.0, 1046000.0, 697000.0, 523000.0, 488000.0, 419000.0, 349000.0], "P15 - Nabire - Kigamani": [3190000.0, 1595000.0, 1064000.0, 798000.0, 745000.0, 638000.0, 532000.0], "P13 - Ransiki - Anggi": [1345000.0, 673000.0, 449000.0, 337000.0, 314000.0, 269000.0, 225000.0], "P13 - Ransiki - Bintuni": [2971000.0, 1486000.0, 991000.0, 743000.0, 694000.0, 595000.0, 496000.0], "P12 - Sorong - Aifat": [2751000.0, 1376000.0, 917000.0, 688000.0, 642000.0, 551000.0, 459000.0], "P12 - Sorong - Fef": [3071000.0, 1536000.0, 1024000.0, 768000.0, 717000.0, 615000.0, 512000.0], "P17 - Tanah Merah - Merauke": [3500000.0, 2625000.0, 1750000.0, 1313000.0, 1225000.0, 1050000.0, 875000.0], "P15 - Tigi - Timika": [3407000.0, 1704000.0, 1136000.0, 852000.0, 795000.0, 682000.0, 568000.0], "P17 - Waropko - Tanah Merah": [2319000.0, 1160000.0, 773000.0, 580000.0, 542000.0, 464000.0, 387000.0]}, "enduser": {"P12 - Aifat - Teminabuan": [2074000.0, 2074000.0, 2074000.0, 1814000.0, 1814000.0, 1814000.0, 1814000.0], "P15 - Enarotali - Tigi": [2069000.0, 2069000.0, 2069000.0, 1809000.0, 1809000.0, 1809000.0, 1809000.0], "P16 - Jayapura - Waris": [1992000.0, 1992000.0, 1992000.0, 1731000.0, 1731000.0, 1731000.0, 1731000.0], "P17 - Kepi Bmh - Kepi Tower": [2079000.0, 2079000.0, 2079000.0, 1819000.0, 1819000.0, 1819000.0, 1819000.0], "P15 - Kigamani - Enarotali": [2079000.0, 2079000.0, 2079000.0, 1819000.0, 1819000.0, 1819000.0, 1819000.0], "P11 - Manokwari - Ransiki": [2051000.0, 2051000.0, 2051000.0, 1791000.0, 1791000.0, 1791000.0, 1791000.0], "P15 - Nabire - Kigamani": [2051000.0, 2051000.0, 2051000.0, 1791000.0, 1791000.0, 1791000.0, 1791000.0], "P13 - Ransiki - Anggi": [2028000.0, 2028000.0, 2028000.0, 1768000.0, 1768000.0, 1768000.0, 1768000.0], "P13 - Ransiki - Bintuni": [2079000.0, 2079000.0, 2079000.0, 1819000.0, 1819000.0, 1819000.0, 1819000.0], "P12 - Sorong - Aifat": [2044000.0, 2044000.0, 2044000.0, 1784000.0, 1784000.0, 1784000.0, 1784000.0], "P12 - Sorong - Fef": [2051000.0, 2051000.0, 2051000.0, 1791000.0, 1791000.0, 1791000.0, 1791000.0], "P17 - Tanah Merah - Merauke": [1416000.0, 1416000.0, 1416000.0, 1235000.0, 1235000.0, 1235000.0, 1235000.0], "P15 - Tigi - Timika": [2068000.0, 2068000.0, 2068000.0, 1807000.0, 1807000.0, 1807000.0, 1807000.0], "P17 - Waropko - Tanah Merah": [2038000.0, 2038000.0, 2038000.0, 1777000.0, 1777000.0, 1777000.0, 1777000.0]}, "lastmile_rate": 1460.0}};
+const Rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+const todayStr = ()=> new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+document.getElementById('m_tgl').textContent = 'Jakarta, '+todayStr();
+
+function pd(s){const a=String(s).split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);}
+// Prorata harian: jumlah dari (hari aktif / hari dalam bulan) tiap bulan dalam periode.
+// calcDuration: hitung bulan kalender penuh + sisa hari
+// 1 Mei–19 Jun → {months:1, days:19, factor:1.633, label:"1 bulan 19 hari"}
+// 29 Mei–28 Jun → {months:1, days:0,  factor:1.0,   label:"1 bulan"}
+function calcDuration(start, finish){
+  if(!start||!finish) return null;
+  const s=pd(start), f=pd(finish); if(f<s) return null;
+  // exclusive end = finish + 1 hari (perlakukan finish sebagai hari terakhir inklusif)
+  const fe=new Date(f.getFullYear(), f.getMonth(), f.getDate()+1);
+  // hitung bulan kalender penuh
+  let mo=0, cur=new Date(s);
+  while(true){
+    const nxt=new Date(cur.getFullYear(), cur.getMonth()+1, cur.getDate());
+    if(nxt<=fe){ mo++; cur=nxt; } else break;
+  }
+  // sisa hari setelah bulan-bulan penuh
+  const remDays=Math.round((fe-cur)/86400000);
+  // faktor untuk kalkulasi total (prorata)
+  const dim=new Date(cur.getFullYear(), cur.getMonth()+1, 0).getDate();
+  const factor=mo + remDays/dim;
+  // label tampilan
+  let label='';
+  if(mo&&remDays)  label=mo+' bulan '+remDays+' hari';
+  else if(mo)      label=mo+' bulan';
+  else if(remDays) label=remDays+' hari';
+  else label='—';
+  return {months:mo, days:remDays, factor, label};
+}
+// ---- terbilang (Indonesian) ----
+function terbilang(n){
+  n=Math.round(n); if(n===0) return 'nol';
+  const sa=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
+  function tri(x){let s='';
+    const r=Math.floor(x/100), sisa=x%100;
+    if(r===1) s+='seratus '; else if(r>1) s+=sa[r]+' ratus ';
+    if(sisa<12) s+=sa[sisa];
+    else if(sisa<20) s+=sa[sisa-10]+' belas';
+    else{const p=Math.floor(sisa/10),q=sisa%10; s+=sa[p]+' puluh'+(q?' '+sa[q]:'');}
+    return s.trim();
+  }
+  const unit=['','ribu','juta','miliar','triliun'];
+  let parts=[],i=0,x=n;
+  while(x>0){const c=x%1000; if(c) {let t=tri(c); if(i===1&&c===1) t='se'; parts.unshift(t+(unit[i]?' '+unit[i]:''));} x=Math.floor(x/1000); i++;}
+  return parts.join(' ').replace(/se ribu/,'seribu').replace(/\s+/g,' ').trim();
+}
+
+// ================= ENGINES =================
+function eLayanan(f){
+  const proj=f.proj, cap=parseFloat(f.cap), disc=(parseFloat(f.disc)||0)/100;
+  if(!proj||!cap) return {err:'Pilih project & isi kapasitas.'};
+  const list=DATA.layanan[proj]; if(!list) return {err:'Project tidak ada di acuan.'};
+  const find=c=>{const m=list.find(x=>Math.abs(x.cap-c)<1e-9); return m?m.price:null;};
+  let base=null, rule='';
+  if(Number.isInteger(cap)&&cap>=1&&cap<=9){const p1=find(1); if(p1==null)return{err:'Harga 1 Gbps tidak ada.'}; base=cap*p1; rule=cap+' × '+Rp(p1)+' (tarif 1 Gbps)';}
+  else if(Number.isInteger(cap)&&cap%10===0&&cap>=10){const p10=find(10); if(p10==null)return{err:'Harga 10 Gbps tidak ada.'}; base=(p10/10)*cap; rule=cap+' × ('+Rp(p10)+'/10)';}
+  else{base=find(cap); if(base==null)return{err:'Kapasitas '+cap+' tidak ada di acuan untuk '+proj+'.'}; rule='lookup persis '+cap+' Gbps';}
+  const eff=base*(1-disc);
+  return {gross:base,eff,disc, rule,
+    desc:'Layanan Bandwidth — '+proj+' · '+cap+' Gbps',
+    f};
+}
+function eDark(f){
+  const seg=f.seg, km=parseFloat(f.km), disc=(parseFloat(f.disc)||0)/100;
+  if(!seg||!km) return {err:'Pilih segmen & isi km yang disewa.'};
+  const s=DATA.darkfiber.find(x=>x.name===seg); if(!s) return {err:'Segmen tidak ada.'};
+  if(km>s.total_km) return {err:'Sewa ('+km+' km) melebihi panjang segmen ('+s.total_km+' km).'};
+  const hkm=s.type==='laut'?3000000:1000000;
+  const ratio=km/s.total_km;
+  const peng=ratio<0.25?2.5:ratio<0.5?2:ratio<0.75?1.5:1;
+  const base=km*hkm*peng, eff=base*(1-disc);
+  return {gross:base,eff,disc,
+    rule:km+' km × '+Rp(hkm)+'/km ('+s.type+') × pengali '+peng+' (rasio '+(ratio*100).toFixed(1)+'%)',
+    desc:'Dark Fiber — '+seg+' · sewa '+km+' km',f};
+}
+function matchColo(proj,loc,prod){
+  return DATA.colo.find(r=>r.proj===proj && r.prod===prod &&
+    r.loc.split(',').map(x=>x.trim()).includes(loc));
+}
+function eColo(f){
+  const proj=f.proj,loc=f.loc,prod=f.prod,disc=(parseFloat(f.disc)||0)/100;
+  if(!proj||!loc||!prod) return {err:'Pilih project, lokasi, dan produk.'};
+  const row=matchColo(proj,loc,prod); if(!row) return {err:'Kombinasi tidak ada di acuan.'};
+  const ptype=f.ptype||'none', qty=parseFloat(f.pqty)||0;
+  let addP=0; if(ptype==='dc') addP=(qty/10)*526000; else if(ptype==='ac') addP=(qty/2)*460000;
+  const first=f.first==='ya';
+  let discBase=row.price;
+  if(first){const p=prod.toLowerCase();
+    if(p.startsWith('1u'))discBase=0; else if(p.startsWith('2u'))discBase=750000;
+    else if(p.startsWith('3u'))discBase=1500000; else if(p.startsWith('4u'))discBase=2500000;}
+  const base=(discBase+addP)*row.coef, eff=base*(1-disc);
+  return {gross:base,eff,disc,
+    rule:'( '+Rp(discBase)+(addP?' + daya '+Rp(addP):'')+' ) × koef '+row.coef + (first?' · perangkat pertama':''),
+    desc:'Colocation — '+proj+' · '+loc+' · '+prod+(ptype!=='none'?' · '+qty+'A '+ptype.toUpperCase():''),f};
+}
+function ePerl(f){
+  const proj=f.proj, cap=parseFloat(f.cap), dist=parseFloat(f.dist)||0, disc=(parseFloat(f.disc)||0)/100;
+  if(!proj||!cap) return {err:'Pilih project & isi kapasitas (Mbps).'};
+  const b=DATA.perluasan.bakti[proj], bb=DATA.perluasan.backbone[proj], eu=DATA.perluasan.enduser[proj];
+  if(!b||!bb||!eu) return {err:'Project tidak ada di acuan perluasan.'};
+  const tiers=DATA.perluasan.tiers, big=cap>1000;
+  let vprt,vcol,vbb,veu;
+  if(big){vprt=(cap/1000)*b.prt; vcol=(cap/1000)*b.col; vbb=(cap/1000)*bb[0]; veu=(cap/1000)*eu[0];}
+  else{const idx=tiers.indexOf(cap);
+    if(idx<0) return {err:'Kapasitas harus salah satu tier: '+tiers.join(', ')+' Mbps (atau >1000).'};
+    vprt=b.prt; vcol=b.col; vbb=bb[idx]; veu=eu[idx];}
+  const bakti=vprt*(1-disc)+vcol;
+  const vlm=Math.ceil(dist/250)*250*DATA.perluasan.lastmile_rate;
+  const ptt=vbb+veu+vlm;
+  const k=bakti+ptt;
+  return {gross:k,eff:k,disc, perl:true,
+    rule:'BAKTI '+Rp(bakti)+' + PTT '+Rp(ptt)+' (bb '+Rp(vbb)+' · eu '+Rp(veu)+' · lastmile '+Rp(vlm)+')',
+    desc:'Perluasan — '+proj+' · '+cap+' Mbps · lastmile '+dist+' m',f};
+}
+const ENGINES={layanan:eLayanan,darkfiber:eDark,colo:eColo,perluasan:ePerl};
+
+// ================= FORMS =================
+const opt=(a,sel)=>a.map(v=>`<option ${String(v)===String(sel)?'selected':''}>${v}</option>`).join('');
+function dateRow(f){return `
+  <div class="row2">
+    <div><label class="fl">Mulai <span class="req">*</span></label><input type="date" id="i_start" value="${f.start||''}"></div>
+    <div><label class="fl">Selesai <span class="req">*</span></label><input type="date" id="i_finish" value="${f.finish||''}"></div>
+  </div>`;}
+const FORMS={
+ layanan:f=>`
+  <label class="fl">Project Number <span class="req">*</span></label>
+  <select id="i_proj">${opt(['',...Object.keys(DATA.layanan)],f.proj)}</select>
+  <div class="row2">
+   <div><label class="fl">Kapasitas (Gbps) <span class="req">*</span></label><input class="num" id="i_cap" type="number" step="0.05" value="${f.cap||''}"></div>
+   <div><label class="fl">Diskon (%)</label><input class="num" id="i_disc" type="number" step="1" value="${f.disc||0}"></div>
+  </div>${dateRow(f)}`,
+ darkfiber:f=>`
+  <label class="fl">Segmen Dark Fiber <span class="req">*</span></label>
+  <select id="i_seg">${opt([''].concat(DATA.darkfiber.map(s=>s.name)),f.seg)}</select>
+  <div class="row2">
+   <div><label class="fl">Panjang sewa (km) <span class="req">*</span></label><input class="num" id="i_km" type="number" step="0.001" value="${f.km||''}"></div>
+   <div><label class="fl">Diskon (%)</label><input class="num" id="i_disc" type="number" step="1" value="${f.disc||0}"></div>
+  </div>${dateRow(f)}`,
+ colo:f=>{
+   const projs=[...new Set(DATA.colo.map(r=>r.proj))];
+   const locs=f.proj?[...new Set(DATA.colo.filter(r=>r.proj===f.proj).flatMap(r=>r.loc.split(',').map(x=>x.trim())))]:[];
+   const prods=(f.proj&&f.loc)?[...new Set(DATA.colo.filter(r=>r.proj===f.proj&&r.loc.split(',').map(x=>x.trim()).includes(f.loc)).map(r=>r.prod))]:[];
+   return `
+   <label class="fl">Project Number <span class="req">*</span></label>
+   <select id="i_proj">${opt([''].concat(projs),f.proj)}</select>
+   <label class="fl">Lokasi <span class="req">*</span></label>
+   <select id="i_loc">${opt([''].concat(locs),f.loc)}</select>
+   <label class="fl">Produk <span class="req">*</span></label>
+   <select id="i_prod">${opt([''].concat(prods),f.prod)}</select>
+   <label class="fl">Nama Perangkat</label>
+   <input id="i_dev" type="text" placeholder="mis. Router Cisco ASR-9001 / OLT Huawei" value="${(f.dev||'').replace(/"/g,'&quot;')}">
+   <div class="row3">
+     <div><label class="fl">Tipe Daya</label><select id="i_ptype">${opt(['none','dc','ac'],f.ptype||'none')}</select></div>
+     <div><label class="fl">Jml Daya (A)</label><input class="num" id="i_pqty" type="number" step="1" value="${f.pqty||0}"></div>
+     <div><label class="fl">Perangkat 1?</label><select id="i_first">${opt(['tidak','ya'],f.first||'tidak')}</select></div>
+   </div>
+   <div class="row2" style="margin-top:0">
+     <div><label class="fl">Diskon (%)</label><input class="num" id="i_disc" type="number" step="1" value="${f.disc||0}"></div>
+     <div></div>
+   </div>${dateRow(f)}`;
+ },
+ perluasan:f=>`
+  <label class="fl">Project (Perluasan) <span class="req">*</span></label>
+  <select id="i_proj">${opt([''].concat(Object.keys(DATA.perluasan.bakti)),f.proj)}</select>
+  <div class="row2">
+   <div><label class="fl">Kapasitas (Mbps) <span class="req">*</span></label><input class="num" id="i_cap" type="number" step="1" value="${f.cap||''}" placeholder="tier / >1000"></div>
+   <div><label class="fl">Lastmile (meter)</label><input class="num" id="i_dist" type="number" step="1" value="${f.dist||0}"></div>
+  </div>
+  <div class="row2" style="margin-top:0">
+   <div><label class="fl">Diskon (%)</label><input class="num" id="i_disc" type="number" step="1" value="${f.disc||0}"></div><div></div>
+  </div>${dateRow(f)}
+  <div class="note">Tier kapasitas baku: ${DATA.perluasan.tiers.join(', ')} Mbps. Untuk &gt;1000 Mbps tarif diskala (cap/1000). Diskon hanya memotong komponen Paring (BAKTI).</div>`
+};
+const HINTS={
+ layanan:'Harga = tarif project × kapasitas. 1–9 Gbps memakai tarif 1 Gbps; kelipatan 10 memakai tarif 10 Gbps; nilai lain di-lookup persis.',
+ darkfiber:'Harga = km × (Rp1jt darat / Rp3jt laut) × pengali jarak. Pengali naik bila porsi sewa terhadap total segmen kecil.',
+ colo:'Harga = (tarif produk + tambahan daya) × koefisien project. Bila "perangkat pertama", tarif dasar U-space dikoreksi.',
+ perluasan:'Harga/bulan = Bagian BAKTI + Bagian PTT (backbone + end-user + lastmile). Diskon sudah termasuk di harga.'
+};
+
+let current='layanan', fstate={layanan:{},darkfiber:{},colo:{},perluasan:{}};
+let items=[];
+
+function readForm(){
+  const f=fstate[current], g=id=>{const e=document.getElementById(id);return e?e.value:undefined;};
+  ['proj','cap','disc','start','finish','seg','km','loc','prod','dev','ptype','pqty','first','dist'].forEach(k=>{
+    const v=g('i_'+k); if(v!==undefined) f[k]=v;
+  });
+  return f;
+}
+function renderForm(){
+  document.getElementById('form').innerHTML=FORMS[current](fstate[current]);
+  document.getElementById('hint').textContent=HINTS[current];
+  document.getElementById('form').querySelectorAll('input,select').forEach(el=>{
+    const handler=()=>{ const id=el.id;
+      readForm();
+      if(current==='colo'&&(id==='i_proj'||id==='i_loc')){ if(id==='i_proj'){fstate.colo.loc='';fstate.colo.prod='';} if(id==='i_loc'){fstate.colo.prod='';} renderForm(); }
+      live();
+    };
+    el.addEventListener('input',handler); el.addEventListener('change',handler);
+  });
+  live();
+}
+function compute(){ return ENGINES[current](readForm()); }
+function live(){
+  const r=compute(), f=readForm();
+  const pe=document.getElementById('liveErr'), pb=document.getElementById('liveBreak'),
+        pp=document.getElementById('livePrice'), add=document.getElementById('addBtn');
+  if(r.err){pp.textContent='—';pb.textContent='';pe.style.color='var(--warn)';pe.textContent=r.err;add.disabled=true;return;}
+  const dur=calcDuration(f.start,f.finish);
+  pp.textContent=Rp(r.eff);
+  let b=r.rule;
+  if(r.disc>0 && !r.perl) b+='  →  setelah diskon '+(r.disc*100).toFixed(0)+'%: '+Rp(r.gross)+' → <b>'+Rp(r.eff)+'</b>';
+  b+='<br>Durasi: <b>'+(dur?dur.label:'—')+'</b> · Total kontrak: <b>'+(dur&&dur.factor?Rp(r.eff*dur.factor):'—')+'</b>';
+  pb.innerHTML=b;
+  if(!(f.start&&f.finish)){ pe.style.color='var(--accent2)'; pe.textContent='ⓘ Isi tanggal Mulai & Selesai untuk mengaktifkan tombol Tambah.'; add.disabled=true; }
+  else if(!dur||!dur.factor){ pe.style.color='var(--warn)'; pe.textContent='Periode tidak valid — tanggal Selesai harus setelah tanggal Mulai.'; add.disabled=true; }
+  else { pe.textContent=''; add.disabled=false; }
+}
+
+document.getElementById('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); current=t.dataset.t; renderForm();
+});
+function pdfmt(s){return new Date(s).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
+document.getElementById('addBtn').addEventListener('click',()=>{
+  const r=compute(), f=readForm(); if(r.err)return;
+  const dur=calcDuration(f.start,f.finish); if(!dur||!dur.factor)return;
+  let name,detail;
+  if(current==='darkfiber'){ name=(f.seg||'').replace(/^DF\s*/,''); detail=Math.round((parseFloat(f.km)||0)*1000).toLocaleString('id-ID'); }
+  else if(current==='layanan'){ name='Bandwidth '+f.proj+' — '+f.cap+' Gbps'; detail=f.cap+' Gbps'; }
+  else if(current==='colo'){ name='Colocation'+(f.dev?' '+f.dev:'')+' — '+f.proj+' / '+f.loc; detail=f.prod; }
+  else { name=f.proj; detail=(f.cap||'')+' Mbps'+(parseFloat(f.dist)?' / LM '+f.dist+' m':''); }
+  items.push({type:current,name,detail,disc:r.disc,durLabel:dur.label,factor:dur.factor,eff:r.eff,total:r.eff*dur.factor,
+    period:pdfmt(f.start)+' – '+pdfmt(f.finish)});
+  renderItems();
+});
+const fmtInt=n=>Math.round(n).toLocaleString('id-ID');
+let hdrMidTouched=false,hdrValTouched=false,hdrNameTouched=false;
+['hdrName','hdrMid','hdrVal'].forEach(id=>{const el=document.getElementById(id);
+  el.addEventListener('input',()=>{ if(id==='hdrName')hdrNameTouched=true; else if(id==='hdrMid')hdrMidTouched=true; else hdrValTouched=true; });});
+function suggestHeaders(){
+  if(!items.length) return;
+  const types=[...new Set(items.map(i=>i.type))];
+  const discs=[...new Set(items.map(i=>Math.round(i.disc*1000)/1000))];
+  const moset=[...new Set(items.map(i=>Math.round(i.factor*100)/100))];
+  const one=types.length===1?types[0]:null;
+  if(!hdrNameTouched) document.getElementById('hdrName').textContent =
+    one==='darkfiber'?'Dark Fiber':one==='layanan'?'Layanan':one==='colo'?'Colocation':one==='perluasan'?'Layanan (Perluasan)':'Item Layanan';
+  if(!hdrMidTouched) document.getElementById('hdrMid').textContent =
+    one==='darkfiber'?'Panjang Kabel (Meter)':one==='layanan'?'Kapasitas (Gbps)':one==='perluasan'?'Kapasitas (Mbps)':one==='colo'?'Produk':'Detail';
+  if(!hdrValTouched){
+    let vh='Total Kontrak (Rp)';
+    const ud=discs.length===1?discs[0]:null, um=moset.length===1?moset[0]:null;
+    let yr=null; if(um){const y=um/12; if(Math.abs(y-Math.round(y))<0.05) yr=Math.round(y);}
+    const pct=ud!=null?Math.round(ud*100):null;
+    if(one==='darkfiber'&&yr) vh='Tarif Sewa LTC '+yr+'th'+(pct?' (Diskon '+pct+'%)':'');
+    else if(pct) vh='Total Kontrak (Diskon '+pct+'%)';
+    document.getElementById('hdrVal').textContent=vh;
+  }
+}
+function renderItems(){
+  const tb=document.getElementById('items'),em=document.getElementById('emptyMsg'),
+        tf=document.getElementById('tfoot'),note=document.getElementById('lnote');
+  tb.innerHTML='';tf.innerHTML='';
+  if(!items.length){em.style.display='block';return;}
+  em.style.display='none';
+  items.forEach((it,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td class="c1">'+it.name+'<small class="sub noprint">'+it.period+(it.disc>0?' · diskon '+Math.round(it.disc*100)+'%':'')+' · '+it.durLabel+'</small></td>'
+    +'<td class="c2">'+it.detail+'</td>'
+    +'<td class="c4">Rp '+fmtInt(it.eff)+'</td>'
+    +'<td class="c3">Rp '+fmtInt(it.total)+'</td>'
+    +'<td class="noprint dz"><button class="delx" data-i="'+i+'">×</button></td>';
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.delx').forEach(b=>b.addEventListener('click',()=>{items.splice(+b.dataset.i,1);renderItems();}));
+  suggestHeaders();
+  const sub=items.reduce((s,x)=>s+x.total,0);
+  const mode=document.getElementById('ppnMode').value;
+  let rows='<tr class="ltotal"><td colspan="3" class="r b">Total</td><td class="c3 b">Rp '+fmtInt(sub)+'</td><td class="noprint"></td></tr>';
+  if(mode==='0'){ note.textContent='Harga belum termasuk ppn'; }
+  else{ const rate=+mode,ppn=sub*rate/100,gr=sub+ppn;
+    rows+='<tr><td colspan="3" class="r">PPN '+rate+'%</td><td class="c3">Rp '+fmtInt(ppn)+'</td><td class="noprint"></td></tr>';
+    rows+='<tr class="ltotal"><td colspan="3" class="r b">Total + PPN</td><td class="c3 b">Rp '+fmtInt(gr)+'</td><td class="noprint"></td></tr>';
+    note.textContent='Harga sudah termasuk PPN '+rate+'%'; }
+  tf.innerHTML=rows;
+}
+function downloadSPH(){
+  if(!items.length){const e=document.getElementById('liveErr');e.style.color='var(--warn)';e.textContent='Tambahkan minimal satu item sebelum mencetak SPH.';return;}
+  const sph=document.getElementById('sph');
+  const css=document.querySelector('style').innerHTML;
+  const fonts='<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">';
+  const doc='<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>SPH</title>'+fonts+'<style>'+css+' body{background:#fff;padding:0}.noprint{display:none!important}@page{margin:16mm}</style></head><body>'+sph.outerHTML+'<scr'+'ipt>window.onload=function(){setTimeout(function(){try{window.print();}catch(e){}},600);};</scr'+'ipt></body></html>';
+  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  const no=((document.getElementById('m_no').textContent)||'SPH').replace(/[^A-Za-z0-9\-]+/g,'_');
+  a.download='SPH_'+no+'.html';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},3000);
+}
+document.getElementById('ppnMode').addEventListener('change',renderItems);
+document.getElementById('printBtn').addEventListener('click',downloadSPH);
+document.getElementById('clearBtn').addEventListener('click',()=>{items=[];renderItems();});
+
+renderForm();
+
+// ═══════════════════════════════════════
+// AUTH + HISTORY + APPROVAL  (API-based)
+// ═══════════════════════════════════════
+const TOKEN_KEY = 'ptt_jwt';
+const ROLE_LABEL = {admin:'Admin', commercial:'Commercial', manager:'Manager', director:'Direktur'};
+
+const API = {
+  async call(path, opts={}) {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    const res = await fetch(path, {
+      ...opts,
+      headers: {
+        'Content-Type':'application/json',
+        ...(token ? {'Authorization':'Bearer '+token} : {}),
+        ...(opts.headers||{})
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    return data;
+  }
+};
+
+function getSession() {
+  const t = sessionStorage.getItem(TOKEN_KEY);
+  if (!t) return null;
+  try {
+    const p = JSON.parse(atob(t.split('.')[1]));
+    if (p.exp*1000 < Date.now()) { sessionStorage.removeItem(TOKEN_KEY); return null; }
+    return p;
+  } catch { return null; }
+}
+
+async function doLogin() {
+  const username = document.getElementById('l-user').value.trim();
+  const password = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  if (!username || !password) { errEl.textContent='Isi username dan password.'; errEl.style.display='block'; return; }
+  try {
+    const {token} = await API.call('/api/auth/login', {method:'POST', body:{username, password}});
+    sessionStorage.setItem(TOKEN_KEY, token);
+    applySession();
+  } catch(e) {
+    errEl.textContent = e.message.includes('salah') ? 'Username atau password salah.' : 'Gagal terhubung ke server. Coba lagi.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  if (!confirm('Keluar dari sistem?')) return;
+  sessionStorage.removeItem(TOKEN_KEY);
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('topbar-user').style.display = 'none';
+}
+
+function applySession() {
+  const s = getSession();
+  if (!s) {
+    document.getElementById('login-overlay').classList.remove('hidden');
+    document.getElementById('topbar-user').style.display = 'none';
+    return;
+  }
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('topbar-user').style.display = 'flex';
+  document.getElementById('tu-name').textContent = s.name;
+  document.getElementById('tu-role').textContent = ROLE_LABEL[s.role] || s.role;
+  // Print button hidden — only available in Riwayat after approved
+  const pb = document.getElementById('printBtn');
+  if (pb) pb.style.display = 'none';
+  document.getElementById('btn-user-mgmt').style.display = s.role==='admin' ? '' : 'none';
+}
+
+// ── HISTORY (API) ──
+const STATUS_HTML = {
+  draft:'<span class="status-badge s-draft">Draft</span>',
+  submitted:'<span class="status-badge s-submitted">Menunggu Approval</span>',
+  partial:'<span class="status-badge s-partial">Mengetahui ✓</span>',
+  approved:'<span class="status-badge s-approved">Disetujui ✓</span>',
+  rejected:'<span class="status-badge s-rejected">Ditolak ✗</span>',
+};
+function fmtDt(iso){
+  if(!iso) return '—';
+  const d=new Date(iso);
+  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})+' '+
+         d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtRp(n){ return 'Rp '+Math.round(n).toLocaleString('id-ID'); }
+
+let histFilter = '';
+function setHistFilter(el, f) {
+  document.querySelectorAll('.hist-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on'); histFilter = f; renderHistList();
+}
+function openHistory() {
+  document.getElementById('hist-overlay').classList.add('on');
+  document.getElementById('hist-detail').style.display = 'none';
+  document.getElementById('hist-list').style.display = 'block';
+  renderHistList();
+}
+function closeHistory() { document.getElementById('hist-overlay').classList.remove('on'); }
+document.getElementById('hist-overlay').addEventListener('click', e=>{ if(e.target===document.getElementById('hist-overlay'))closeHistory(); });
+
+async function saveToHistory(action) {
+  if (!items.length) { alert('Tambahkan minimal satu item sebelum menyimpan.'); return; }
+  const nomor = document.getElementById('m_no').textContent || '';
+  const tgl = document.getElementById('m_tgl').textContent || '';
+  const kepada = document.querySelector('.lto .b[contenteditable]')?.textContent || '';
+  const perihal = document.querySelector('.lmeta tbody tr:last-child span[contenteditable]')?.textContent || '';
+  const sub = items.reduce((a,x)=>a+x.total, 0);
+  const mode = document.getElementById('ppnMode').value;
+  const ppn = sub*(+mode)/100;
+  try {
+    const result = await API.call('/api/sph', {
+      method:'POST',
+      body:{nomor, tanggal:tgl, kepada, perihal, items, subtotal:sub, ppn_rate:mode, ppn, total:sub+ppn,
+            status: action==='submitted'?'submitted':'draft'}
+    });
+    alert(action==='submitted' ? `SPH berhasil dikirim untuk persetujuan.\nID: ${result.id}` : `Draft disimpan.\nID: ${result.id}`);
+    openHistory();
+  } catch(e) { alert('Gagal menyimpan: '+e.message); }
+}
+
+async function renderHistList() {
+  const el = document.getElementById('hist-list');
+  el.innerHTML = '<div style="padding:24px;text-align:center;color:#999">⏳ Memuat riwayat…</div>';
+  try {
+    let list = await API.call('/api/sph');
+    if (histFilter) list = list.filter(r => r.status === histFilter);
+    if (!list.length) { el.innerHTML = '<div style="padding:32px;text-align:center;color:#999">Belum ada riwayat SPH.</div>'; return; }
+    el.innerHTML = `<table class="hist-table"><thead><tr>
+      <th>ID</th><th>Nomor SPH</th><th>Kepada</th><th>Dibuat Oleh</th><th>Tanggal</th><th>Total</th><th>Status</th>
+    </tr></thead><tbody>`
+    + list.map(r=>`<tr onclick="openDetail('${r.id}')">
+      <td style="font-family:'IBM Plex Mono';font-size:11px;color:var(--accent)">${r.id}</td>
+      <td style="font-size:12px">${r.nomor||''}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.kepada||''}</td>
+      <td style="font-size:12px">${r.created_name}</td>
+      <td style="font-size:11px;font-family:'IBM Plex Mono'">${fmtDt(r.created_at)}</td>
+      <td style="font-family:'IBM Plex Mono';font-size:12px">${fmtRp(r.total||0)}</td>
+      <td>${STATUS_HTML[r.status]||r.status}</td>
+    </tr>`).join('') + '</tbody></table>';
+  } catch(e) { el.innerHTML = `<div style="padding:24px;color:var(--warn)">⚠ ${e.message}</div>`; }
+}
+
+async function openDetail(id) {
+  document.getElementById('hist-list').style.display = 'none';
+  const det = document.getElementById('hist-detail');
+  det.style.display = 'block';
+  det.innerHTML = '<div style="padding:32px;text-align:center;color:#999">⏳ Memuat detail…</div>';
+  try {
+    const rec = await API.call('/api/sph/'+id);
+    const s = getSession();
+    const canMengetahui = s && ['manager','director','admin'].includes(s.role);
+    const canMenyetujui = s && ['director','admin'].includes(s.role);
+    const canPrint = rec.status === 'approved';
+    const mengetahui = rec.mengetahui && typeof rec.mengetahui === 'object' ? rec.mengetahui : (rec.mengetahui ? JSON.parse(rec.mengetahui) : null);
+    const menyetujui = rec.menyetujui && typeof rec.menyetujui === 'object' ? rec.menyetujui : (rec.menyetujui ? JSON.parse(rec.menyetujui) : null);
+    const items_rec = Array.isArray(rec.items) ? rec.items : JSON.parse(rec.items||'[]');
+
+    const mkStep = (label, data) => {
+      const done = data && data.approved===true, rej = data && data.approved===false;
+      const ic = done?'done':rej?'rej':'wait';
+      return `<div class="appr-step">
+        <div class="appr-dot ${ic}">${done?'✓':rej?'✗':'○'}</div>
+        <div class="appr-info">
+          <div class="label">${label}</div>
+          <div class="who">${data?data.name:'Menunggu…'}</div>
+          ${data?`<div class="when">${fmtDt(data.at)}</div>`:''}
+          ${data&&data.note?`<div class="note">"${data.note}"</div>`:''}
+        </div></div>`;
+    };
+
+    let actionHtml = '';
+    if (rec.status==='submitted' && canMengetahui && !mengetahui) {
+      actionHtml += `<div style="padding:0 20px 4px">
+        <textarea class="note-inp" id="note-mg" placeholder="Catatan (opsional)…" rows="2"></textarea>
+        <div style="display:flex;gap:10px">
+          <button class="btn-approve green" onclick="doApprove('${id}','mengetahui',true)">✓ Mengetahui & Setujui</button>
+          <button class="btn-approve red" onclick="doApprove('${id}','mengetahui',false)">✗ Tolak</button>
+        </div></div>`;
+    }
+    if ((rec.status==='partial'||rec.status==='submitted') && canMenyetujui && !menyetujui && mengetahui) {
+      actionHtml += `<div style="padding:8px 20px 4px">
+        <textarea class="note-inp" id="note-ms" placeholder="Catatan persetujuan (opsional)…" rows="2"></textarea>
+        <div style="display:flex;gap:10px">
+          <button class="btn-approve green" onclick="doApprove('${id}','menyetujui',true)">✓ Menyetujui</button>
+          <button class="btn-approve red" onclick="doApprove('${id}','menyetujui',false)">✗ Tolak</button>
+        </div></div>`;
+    }
+
+    det.innerHTML = `<div style="padding:16px 20px 4px;border-top:1px solid var(--line)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn-sm-ghost" onclick="backToList()">← Kembali</button>
+        <span style="font-family:'IBM Plex Mono';font-weight:700;color:var(--accent)">${rec.id}</span>
+        ${STATUS_HTML[rec.status]||''}
+        <span style="font-size:11.5px;color:var(--ink2)">Dibuat: ${rec.created_name} · ${fmtDt(rec.created_at)}</span>
+        ${canPrint?`<button class="btn-approve green" onclick="printApprovedSPH('${rec.id}')" style="margin-left:auto">🖨 Cetak / Simpan PDF</button>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:12.5px">
+        <div><b>Nomor:</b> ${rec.nomor||''}</div><div><b>Tanggal:</b> ${rec.tanggal||''}</div>
+        <div><b>Kepada:</b> ${rec.kepada||''}</div><div><b>Perihal:</b> ${rec.perihal||'—'}</div>
+      </div>
+      <table class="sph-items-mini" style="margin:0 0 12px">
+        <thead><tr><th>#</th><th>Deskripsi</th><th>Detail</th><th class="r">Harga/Bln</th><th class="r">Durasi</th><th class="r">Total</th></tr></thead>
+        <tbody>${items_rec.map((it,i)=>`<tr><td>${i+1}</td><td>${it.name||''}</td><td>${it.detail||''}</td>
+          <td class="r">${fmtRp(it.eff||0)}</td><td class="r">${it.durLabel||''}</td><td class="r">${fmtRp(it.total||0)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr style="background:var(--chip);font-weight:700">
+          <td colspan="5" class="r">TOTAL${rec.ppn_rate&&rec.ppn_rate!=='0'?' (termasuk PPN '+rec.ppn_rate+'%)':' (belum termasuk PPN)'}</td>
+          <td class="r" style="font-family:'IBM Plex Mono'">${fmtRp(rec.total||0)}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div class="appr-chain">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600;margin-bottom:12px">Rantai Persetujuan</div>
+      ${mkStep('Dibuat Oleh',{name:rec.created_name,at:rec.created_at,approved:true})}
+      ${mkStep('Mengetahui', mengetahui)}
+      ${mkStep('Menyetujui', menyetujui)}
+    </div>
+    ${actionHtml}`;
+  } catch(e) {
+    det.innerHTML = `<div style="padding:24px;color:var(--warn)">⚠ ${e.message}
+      <button class="btn-sm-ghost" style="margin-left:12px" onclick="backToList()">← Kembali</button></div>`;
+  }
+}
+
+function backToList() {
+  document.getElementById('hist-detail').style.display = 'none';
+  document.getElementById('hist-list').style.display = 'block';
+  renderHistList();
+}
+
+async function doApprove(id, role, approved) {
+  const noteId = role==='mengetahui'?'note-mg':'note-ms';
+  const note = (document.getElementById(noteId)?.value||'').trim();
+  if (!approved && !note) { alert('Mohon isi catatan saat menolak.'); return; }
+  try {
+    await API.call(`/api/sph/${id}/approve`, {method:'POST', body:{step:role, approved, note}});
+    alert(approved ? `✓ ${role==='mengetahui'?'Mengetahui':'Menyetujui'} berhasil dicatat.` : '✗ SPH ditolak.');
+    openDetail(id);
+  } catch(e) { alert('Gagal: '+e.message); }
+}
+
+// Print approved SPH — reconstruct from stored data
+async function printApprovedSPH(id) {
+  try {
+    const rec = await API.call('/api/sph/'+id);
+    if (rec.status !== 'approved') { alert('SPH belum disetujui.'); return; }
+    const saved = [...items];
+    const items_rec = Array.isArray(rec.items) ? rec.items : JSON.parse(rec.items||'[]');
+    items.length = 0; items_rec.forEach(it=>items.push(it));
+    document.getElementById('m_no').textContent = rec.nomor||'';
+    document.getElementById('m_tgl').textContent = rec.tanggal||'';
+    const kepada = document.querySelector('.lto .b[contenteditable]');
+    if (kepada) kepada.textContent = rec.kepada||'';
+    renderItems();
+    downloadSPH();
+    setTimeout(()=>{
+      items.length=0; saved.forEach(it=>items.push(it));
+      document.getElementById('m_no').textContent='';
+      renderItems();
+    }, 600);
+  } catch(e) { alert('Gagal mencetak: '+e.message); }
+}
+
+// ── INIT ──
+(function(){
+  // embed logo in login box
+  const navLogo = document.querySelector('.lh-logo img');
+  const loginLogo = document.getElementById('login-logo');
+  if (navLogo && loginLogo) loginLogo.src = navLogo.src;
+  applySession();
+  ['l-user','l-pass'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter'){if(id==='l-user')document.getElementById('l-pass').focus();else doLogin();}});
+  });
+})();
+// ═══════════════════════════════════════
+// USER CRUD  (API-based)
+// ═══════════════════════════════════════
+async function openUserMgmt() {
+  const s = getSession();
+  if (!s || s.role !== 'admin') { alert('Hanya Admin yang dapat mengelola pengguna.'); return; }
+  cancelEditUser();
+  await renderUserTable();
+  document.getElementById('user-overlay').classList.add('on');
+}
+function closeUserMgmt() { document.getElementById('user-overlay').classList.remove('on'); }
+document.getElementById('user-overlay').addEventListener('click', e=>{ if(e.target===document.getElementById('user-overlay'))closeUserMgmt(); });
+
+const ROLE_CLASS={admin:'rc-admin',commercial:'rc-commercial',manager:'rc-manager',director:'rc-director'};
+const ROLE_OPTS={admin:'Admin',commercial:'Commercial',manager:'Manager',director:'Direktur'};
+
+async function renderUserTable() {
+  const tbody = document.getElementById('user-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#999">Memuat…</td></tr>';
+  try {
+    const users = await API.call('/api/users');
+    const s = getSession();
+    tbody.innerHTML = users.map(u=>`<tr>
+      <td style="font-family:'IBM Plex Mono';color:var(--ink2);font-size:11px">${u.id}</td>
+      <td><b>${u.name}</b></td>
+      <td style="font-family:'IBM Plex Mono';font-size:12px;color:var(--accent)">${u.username}</td>
+      <td><span class="role-chip ${ROLE_CLASS[u.role]||'rc-commercial'}">${ROLE_OPTS[u.role]||u.role}</span></td>
+      <td style="font-size:11px;color:var(--ink2)">${u.created_at?new Date(u.created_at).toLocaleDateString('id-ID'):'-'}</td>
+      <td style="text-align:center">
+        <button class="btn-edit-sm" onclick="editUser(${u.id},'${u.username}','${u.name}','${u.role}')">✏ Edit</button>
+        ${u.username!==s.username?`<button class="btn-danger-sm" onclick="deleteUser(${u.id},'${u.name}')">🗑</button>`:'<span style="font-size:10px;color:var(--ink2)">Aktif</span>'}
+      </td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#999;padding:20px">Belum ada pengguna.</td></tr>';
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--warn);padding:14px">⚠ ${e.message}</td></tr>`;
+  }
+}
+
+function editUser(id, username, name, role) {
+  document.getElementById('uf-title').textContent = '✏ Edit Pengguna';
+  document.getElementById('uf-edit-idx').value = id;
+  document.getElementById('uf-name').value = name;
+  document.getElementById('uf-user').value = username;
+  document.getElementById('uf-user').disabled = true;
+  document.getElementById('uf-pass').value = '';
+  document.getElementById('uf-role').value = role;
+  document.getElementById('uf-pass-hint').textContent = 'Kosongkan jika tidak ingin mengubah password.';
+  document.getElementById('uf-cancel-btn').style.display = 'inline-flex';
+  document.getElementById('uf-err').style.display = 'none';
+  document.querySelector('.user-form').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelEditUser() {
+  document.getElementById('uf-title').textContent = '+ Tambah Pengguna Baru';
+  document.getElementById('uf-edit-idx').value = '';
+  document.getElementById('uf-name').value = '';
+  document.getElementById('uf-user').value = '';
+  document.getElementById('uf-user').disabled = false;
+  document.getElementById('uf-pass').value = '';
+  document.getElementById('uf-role').value = 'commercial';
+  document.getElementById('uf-pass-hint').textContent = 'Minimal 6 karakter';
+  document.getElementById('uf-cancel-btn').style.display = 'none';
+  document.getElementById('uf-err').style.display = 'none';
+}
+
+async function saveUser() {
+  const name = document.getElementById('uf-name').value.trim();
+  const username = document.getElementById('uf-user').value.trim().toLowerCase().replace(/\s+/g,'');
+  const pass = document.getElementById('uf-pass').value;
+  const role = document.getElementById('uf-role').value;
+  const editId = document.getElementById('uf-edit-idx').value;
+  const isEdit = editId !== '';
+  if (!name || (!isEdit && !username) || !role) { showUfErr('Nama, username, dan role wajib diisi.'); return; }
+  if (!isEdit && !/^[a-z0-9._\-]+$/.test(username)) { showUfErr('Username hanya huruf kecil, angka, titik, underscore, strip.'); return; }
+  if (!isEdit && !pass) { showUfErr('Password wajib diisi untuk pengguna baru.'); return; }
+  if (pass && pass.length < 6) { showUfErr('Password minimal 6 karakter.'); return; }
+  try {
+    if (isEdit) {
+      await API.call('/api/users/'+editId, {method:'PUT', body:{name, role, ...(pass?{password:pass}:{})}});
+    } else {
+      await API.call('/api/users', {method:'POST', body:{username, password:pass, name, role}});
+    }
+    cancelEditUser();
+    await renderUserTable();
+    document.getElementById('uf-err').style.display = 'none';
+  } catch(e) { showUfErr(e.message); }
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Hapus pengguna "${name}"?\nAksi ini tidak bisa dibatalkan.`)) return;
+  try {
+    await API.call('/api/users/'+id, {method:'DELETE'});
+    await renderUserTable();
+  } catch(e) { alert('Gagal menghapus: '+e.message); }
+}
+
+function showUfErr(msg) { const e=document.getElementById('uf-err'); e.textContent=msg; e.style.display='block'; }
+function togglePw(inputId,eyeEl) {
+  const inp=document.getElementById(inputId);
+  inp.type=inp.type==='password'?'text':'password';
+  eyeEl.textContent=inp.type==='password'?'👁':'🙈';
+}
+
+</script>
+</body>
+</html>
